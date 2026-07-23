@@ -1,0 +1,39 @@
+####### My Settings #######
+## exports
+### PATH
+export PATH="/usr/local/sbin:$PATH"
+### Private PATH
+#export PATH=$PATH:$HOME/bin
+
+## aliases
+### Common
+alias ll="ls -alh"
+alias cdp="cd -P"
+alias n='nvim'
+
+### Python
+alias pip=pip3
+alias pye="python -m venv venv"
+alias pyse="source venv/bin/activate"
+alias pyde="deactivate"
+### Jupyter
+alias jupynote="jupyter notebook"
+### uv
+alias uvr='uv run'
+alias uvi='uv init'
+alias uvil='uv init --lib'
+alias uve='uv venv'
+alias uvse="source .venv/bin/activate"
+alias uvde="deactivate"
+alias uva='uv add'
+alias uvrm='uv remove'
+
+# Claude Code
+alias claudex='claude --allowedTools "Bash,Write,Edit" --dangerously-skip-permissions'
+alias claudext='claude --allowedTools "Bash,Write,Edit" --dangerously-skip-permissions --channels plugin:telegram@claude-plugins-official'
+
+### Kubernetes
+alias kvc='kubectl config get-contexts'
+alias kvcc='kubectl config current-context'
+alias kcc='kubectl config use-context'
+alias k='kubectl'

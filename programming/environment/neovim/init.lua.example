@@ -1,0 +1,146 @@
+-- =============================================================================
+-- Bootstrap lazy.nvim
+-- =============================================================================
+local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
+if not vim.loop.fs_stat(lazypath) then
+  vim.fn.system({ "git", "clone", "--filter=blob:none",
+    "https://github.com/folke/lazy.nvim.git", "--branch=stable", lazypath })
+end
+vim.opt.rtp:prepend(lazypath)
+
+-- =============================================================================
+-- Options
+-- =============================================================================
+vim.g.mapleader      = ","
+vim.g.maplocalleader = ","
+
+-- Command Line
+vim.opt.cmdheight = 1
+
+-- Encoding
+vim.opt.encoding     = "utf-8"
+vim.opt.fileencoding = "utf-8"
+
+-- Line numbers
+vim.opt.number         = true
+vim.opt.relativenumber = true
+
+-- Tabs / indentation
+vim.opt.expandtab   = true
+vim.opt.tabstop     = 2
+vim.opt.softtabstop = 0
+vim.opt.shiftwidth  = 2
+vim.opt.autoindent  = true
+vim.opt.smarttab    = true
+vim.opt.smartindent = true
+
+-- Search
+vim.opt.ignorecase = true
+vim.opt.smartcase  = true
+vim.opt.incsearch  = true
+
+-- Splits
+vim.opt.splitright = true
+vim.opt.splitbelow = true
+
+-- UI
+vim.opt.termguicolors = true
+vim.opt.signcolumn    = "yes"
+vim.opt.cursorline    = true
+vim.opt.scrolloff     = 8
+vim.opt.wrap          = false
+vim.opt.cmdheight     = 2
+
+-- Clipboard
+vim.opt.clipboard = "unnamed"
+
+-- Performance
+vim.opt.updatetime = 100
+vim.opt.hidden     = true
+
+-- Makefile: tabs not spaces
+vim.api.nvim_create_autocmd("FileType", {
+  pattern  = "make",
+  callback = function()
+    vim.opt_local.expandtab   = false
+    vim.opt_local.shiftwidth  = 8
+    vim.opt_local.softtabstop = 0
+  end,
+})
+
+-- Dynamic relative numbers
+vim.api.nvim_create_augroup("numbertoggle", { clear = true })
+vim.api.nvim_create_autocmd({ "BufEnter", "FocusGained", "InsertLeave" }, {
+  group    = "numbertoggle",
+  callback = function() vim.opt.relativenumber = true end,
+})
+vim.api.nvim_create_autocmd({ "BufLeave", "FocusLost", "InsertEnter" }, {
+  group    = "numbertoggle",
+  callback = function() vim.opt.relativenumber = false end,
+})
+
+-- TSX/JSX filetype detection
+vim.api.nvim_create_autocmd({ "BufNewFile", "BufRead" }, {
+  pattern  = { "*.tsx", "*.jsx", "*.ts", "*.js" },
+  callback = function() vim.bo.filetype = "typescriptreact" end,
+})
+
+-- =============================================================================
+-- Keymaps
+-- =============================================================================
+local map = function(mode, lhs, rhs, opts)
+  vim.keymap.set(mode, lhs, rhs, vim.tbl_extend("force", { silent = true }, opts or {}))
+end
+
+-- Escape
+map("i", "jk", "<Esc>")
+map("i", "kj", "<Esc>")
+
+-- Save / quit
+map("n", "<C-s>", ":w<CR>")
+map("i", "<C-s>", "<Esc>:w<CR>i")
+map("n", "<C-Q>", ":wq!<CR>")
+map("i", "<C-Q>", "<Esc>:wq!<CR>")
+
+-- Window navigation
+map("n", "<C-h>", "<C-w>h")
+map("n", "<C-j>", "<C-w>j")
+map("n", "<C-k>", "<C-w>k")
+map("n", "<C-l>", "<C-w>l")
+
+-- Window resize
+map("n", "<CS-j>", ":resize -2<CR>")
+map("n", "<CS-k>", ":resize +2<CR>")
+map("n", "<CS-h>", ":vertical resize -2<CR>")
+map("n", "<CS-l>", ":vertical resize +2<CR>")
+
+-- Tab navigation
+map("n", "H", "gT")
+map("n", "L", "gt")
+
+-- Blackhole register
+local blackhole = { "d", "D", "c", "C", "x", "X" }
+for _, key in ipairs(blackhole) do
+  map("n", "<leader>" .. key, '"_' .. key)
+  map("v", "<leader>" .. key, '"_' .. key)
+end
+
+-- Buffer list
+map("n", "<F5>", ":buffers<CR>:buffer<Space>")
+
+-- Terminal
+map("t", "<Esc>", "<C-\\><C-n>")
+map("n", "<C-n>", ":split term://zsh | resize 10<CR>")
+
+-- File explorer
+map("n", "<C-e>", ":Neotree toggle<CR>")
+
+-- Fuzzy find
+map("n", "<C-p>", ":Telescope find_files<CR>")
+
+-- =============================================================================
+-- Plugins
+-- =============================================================================
+require("lazy").setup("plugins", {
+  rocks = { enabled = false },
+})

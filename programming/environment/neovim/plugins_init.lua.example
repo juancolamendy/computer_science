@@ -1,0 +1,316 @@
+return {
+
+  -- ===========================================================================
+  -- Colorscheme: Dracula
+  -- ===========================================================================
+  {
+    "Mofiqul/dracula.nvim",
+    priority = 1000,
+    config = function()
+      require("dracula").setup({ italic_comment = true })
+      vim.cmd.colorscheme("dracula")
+    end,
+  },
+
+  -- ===========================================================================
+  -- File explorer: neo-tree
+  -- ===========================================================================
+  {
+    "nvim-neo-tree/neo-tree.nvim",
+    branch = "v3.x",
+    dependencies = {
+      "nvim-lua/plenary.nvim",
+      "nvim-tree/nvim-web-devicons",
+      "MunifTanjim/nui.nvim",
+    },
+    config = function()
+      require("neo-tree").setup({
+        close_if_last_window = true,
+        filesystem = {
+          filtered_items = {
+            visible       = true,
+            hide_dotfiles = false,
+            hide_gitignored = false,
+          },
+          window = {
+            mappings = { ["h"] = "open_vsplit" },
+          },
+        },
+        git_status = {
+          symbols = {
+            modified  = "✹",
+            staged    = "✚",
+            untracked = "✭",
+            renamed   = "➜",
+            unmerged  = "═",
+            deleted   = "✖",
+            ignored   = "☒",
+          },
+        },
+      })
+    end,
+  },
+
+  -- ===========================================================================
+  -- Fuzzy finder: Telescope
+  -- ===========================================================================
+  {
+    "nvim-telescope/telescope.nvim",
+    dependencies = {
+      "nvim-lua/plenary.nvim",
+      { "nvim-telescope/telescope-fzf-native.nvim", build = "make" },
+    },
+    config = function()
+      local actions = require("telescope.actions")
+      require("telescope").setup({
+        defaults = {
+          mappings = {
+            i = {
+              ["<C-t>"] = actions.select_tab,
+              ["<C-s>"] = actions.select_horizontal,
+              ["<C-v>"] = actions.select_vertical,
+            },
+          },
+        },
+      })
+      require("telescope").load_extension("fzf")
+    end,
+    keys = {
+      { "<C-p>",      "<cmd>Telescope find_files<cr>" },
+      { "<leader>fg", "<cmd>Telescope live_grep<cr>" },
+      { "<leader>fb", "<cmd>Telescope buffers<cr>" },
+      { "<leader>fo", "<cmd>Telescope oldfiles<cr>" },
+    },
+  },
+
+  -- ===========================================================================
+  -- Status line: lualine
+  -- ===========================================================================
+  {
+    "nvim-lualine/lualine.nvim",
+    dependencies = { "nvim-tree/nvim-web-devicons" },
+    config = function()
+      require("lualine").setup({
+        options = { theme = "dracula" },
+        sections = {
+          lualine_a = { "mode", "paste" },
+          lualine_b = { "branch", "readonly", "filename", "diff" },
+          lualine_c = {},
+          lualine_x = { "diagnostics" },
+          lualine_y = { "fileformat", "encoding" },
+          lualine_z = { "progress", "location" },
+        },
+      })
+    end,
+  },
+
+-- ===========================================================================
+  -- Treesitter
+  -- ===========================================================================
+  {
+    "nvim-treesitter/nvim-treesitter",
+    build = ":TSUpdate",
+    config = function()
+      require("nvim-treesitter").setup({
+        ensure_installed = {
+          "lua", "vim", "vimdoc",
+          "javascript", "typescript", "tsx",
+          "json", "yaml", "markdown",
+          "bash", "html", "css",
+          "solidity",
+        },
+        highlight = { enable = true },
+        indent    = { enable = true },
+      })
+    end,
+  },
+
+  { "windwp/nvim-ts-autotag", lazy = true },
+
+  -- ===========================================================================
+  -- Mason: LSP installer
+  -- ===========================================================================
+  {
+    "williamboman/mason.nvim",
+    build = ":MasonUpdate",
+    config = function()
+      require("mason").setup()
+    end,
+  },
+
+  {
+    "williamboman/mason-lspconfig.nvim",
+    dependencies = { "williamboman/mason.nvim" },
+    config = function()
+      require("mason-lspconfig").setup({
+        ensure_installed = {
+          "ts_ls",
+          "eslint",
+          "lua_ls",
+          "cssls",
+          "html",
+          "jsonls",
+        },
+        automatic_installation = true,
+      })
+    end,
+  },
+
+  -- ===========================================================================
+  -- LSP: nvim 0.11+ native API (no require('lspconfig') calls)
+  -- ===========================================================================
+  {
+    "neovim/nvim-lspconfig",
+    dependencies = {
+      "williamboman/mason.nvim",
+      "williamboman/mason-lspconfig.nvim",
+      "hrsh7th/cmp-nvim-lsp",
+    },
+    config = function()
+      local capabilities = require("cmp_nvim_lsp").default_capabilities()
+
+      local on_attach = function(_, buf)
+        local map = function(k, v, desc)
+          vim.keymap.set("n", k, v, { buffer = buf, silent = true, desc = desc })
+        end
+        map("gd",          vim.lsp.buf.definition,     "Go to definition")
+        map("gy",          vim.lsp.buf.type_definition, "Go to type definition")
+        map("gi",          vim.lsp.buf.implementation,  "Go to implementation")
+        map("gr",          vim.lsp.buf.references,      "References")
+        map("K",           vim.lsp.buf.hover,           "Hover docs")
+        map("<leader>rn",  vim.lsp.buf.rename,          "Rename symbol")
+        map("<leader>ac",  vim.lsp.buf.code_action,     "Code action")
+        map("<leader>f",   function() vim.lsp.buf.format({ async = true }) end, "Format")
+        map("[g",          vim.diagnostic.goto_prev,    "Prev diagnostic")
+        map("]g",          vim.diagnostic.goto_next,    "Next diagnostic")
+        map("<space>a",    "<cmd>Telescope diagnostics<cr>",             "All diagnostics")
+        map("<space>o",    "<cmd>Telescope lsp_document_symbols<cr>",    "Document symbols")
+        map("<space>s",    "<cmd>Telescope lsp_workspace_symbols<cr>",   "Workspace symbols")
+      end
+
+      local servers = { "ts_ls", "eslint", "lua_ls", "cssls", "html", "jsonls" }
+      for _, server in ipairs(servers) do
+        vim.lsp.config(server, {
+          capabilities = capabilities,
+          on_attach    = on_attach,
+        })
+        vim.lsp.enable(server)
+      end
+
+      vim.diagnostic.config({
+        virtual_text     = true,
+        signs            = true,
+        underline        = true,
+        update_in_insert = false,
+      })
+    end,
+  },
+
+  -- ===========================================================================
+  -- Completion: nvim-cmp
+  -- ===========================================================================
+  {
+    "hrsh7th/nvim-cmp",
+    dependencies = {
+      "hrsh7th/cmp-nvim-lsp",
+      "hrsh7th/cmp-buffer",
+      "hrsh7th/cmp-path",
+      "L3MON4D3/LuaSnip",
+      "saadparwaiz1/cmp_luasnip",
+      "rafamadriz/friendly-snippets",
+    },
+    config = function()
+      local cmp     = require("cmp")
+      local luasnip = require("luasnip")
+      require("luasnip.loaders.from_vscode").lazy_load()
+
+      cmp.setup({
+        snippet = {
+          expand = function(args) luasnip.lsp_expand(args.body) end,
+        },
+        mapping = cmp.mapping.preset.insert({
+          ["<Tab>"]     = cmp.mapping(function(fallback)
+            if cmp.visible() then cmp.select_next_item()
+            elseif luasnip.expand_or_jumpable() then luasnip.expand_or_jump()
+            else fallback() end
+          end, { "i", "s" }),
+          ["<S-Tab>"]   = cmp.mapping(function(fallback)
+            if cmp.visible() then cmp.select_prev_item()
+            elseif luasnip.jumpable(-1) then luasnip.jump(-1)
+            else fallback() end
+          end, { "i", "s" }),
+          ["<C-Space>"] = cmp.mapping.complete(),
+          ["<CR>"]      = cmp.mapping.confirm({ select = true }),
+          ["<C-f>"]     = cmp.mapping.scroll_docs(4),
+          ["<C-b>"]     = cmp.mapping.scroll_docs(-4),
+        }),
+        sources = cmp.config.sources({
+          { name = "nvim_lsp" },
+          { name = "luasnip" },
+          { name = "buffer" },
+          { name = "path" },
+        }),
+      })
+    end,
+  },
+
+  -- ===========================================================================
+  -- TSX syntax colors (ported from your coc.vim hi groups)
+  -- ===========================================================================
+  {
+    "folke/lsp-colors.nvim",
+    config = function()
+      local hi = vim.api.nvim_set_hl
+      hi(0, "tsxTagName",            { fg = "#E06C75" })
+      hi(0, "tsxComponentName",      { fg = "#E06C75" })
+      hi(0, "tsxCloseComponentName", { fg = "#E06C75" })
+      hi(0, "tsxCloseString",        { fg = "#F99575" })
+      hi(0, "tsxCloseTag",           { fg = "#F99575" })
+      hi(0, "tsxCloseTagName",       { fg = "#F99575" })
+      hi(0, "tsxAttributeBraces",    { fg = "#F99575" })
+      hi(0, "tsxEqual",              { fg = "#F99575" })
+      hi(0, "tsxAttrib",             { fg = "#F8BD7F", italic = true })
+    end,
+  },
+
+  -- ===========================================================================
+  -- Git
+  -- ===========================================================================
+  {
+    "lewis6991/gitsigns.nvim",
+    config = function()
+      require("gitsigns").setup({
+        signs = {
+          add    = { text = "✚" },
+          change = { text = "✹" },
+          delete = { text = "✖" },
+        },
+      })
+    end,
+  },
+
+  -- ===========================================================================
+  -- QoL
+  -- ===========================================================================
+  {
+    "windwp/nvim-autopairs",
+    config = function() require("nvim-autopairs").setup() end,
+  },
+
+  {
+    "numToStr/Comment.nvim",
+    config = function() require("Comment").setup() end,
+  },
+
+  {
+    "lukas-reineke/indent-blankline.nvim",
+    main   = "ibl",
+    config = function() require("ibl").setup() end,
+  },
+
+  {
+    "folke/which-key.nvim",
+    config = function() require("which-key").setup() end,
+  },
+
+}
